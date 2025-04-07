@@ -305,11 +305,23 @@ void ToolMain::UpdateInput(MSG * msg)
 		m_keyArray[msg->wParam] = false;
 		break;
 
-	case WM_MOUSEMOVE:
-		break;
 
+	case WM_MOUSEMOVE:
+	case WM_ACTIVATE:
+	case WM_ACTIVATEAPP:
+	case WM_INPUT:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_LBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_MOUSEWHEEL:
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
+	case WM_MOUSEHOVER:
 	case WM_LBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
 		//set some flag for the mouse button in inputcommands
+		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
 		break;
 
 	}
