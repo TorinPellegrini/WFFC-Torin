@@ -93,19 +93,10 @@ void Camera::Update(DirectX::Mouse::State m_mouseState, DirectX::Mouse::State m_
 
 
 
-	//TODO  any more complex than this, and the camera should be abstracted out to somewhere else
 	//camera motion is on a plane, so kill the 7 component of the look direction
 	Vector3 planarMotionVector = m_camLookDirection;
 	planarMotionVector.y = 0.0;
 
-	if (m_InputCommands.rotRight)
-	{
-		m_camOrientation.y -= m_camRotRate;
-	}
-	if (m_InputCommands.rotLeft)
-	{
-		m_camOrientation.y += m_camRotRate;
-	}
 
 	//create look direction from Euler angles in m_camOrientation
 	// Convert from degrees to radians
@@ -151,6 +142,18 @@ void Camera::Update(DirectX::Mouse::State m_mouseState, DirectX::Mouse::State m_
 void Camera::SetInputVector(DirectX::SimpleMath::Vector3 IPVector)
 {
 	m_camInput += IPVector;
+}
+
+void Camera::RotateCamera(bool isRight)
+{
+	if(isRight == true)
+	{
+		m_camOrientation.y -= m_camRotRate;
+	}
+	else
+	{
+		m_camOrientation.y += m_camRotRate;
+	}
 }
 
 void Camera::SetMouseVisible(bool isVisible)

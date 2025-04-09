@@ -17,6 +17,7 @@ public:
 	void Update(DirectX::Mouse::State m_mouseState, DirectX::Mouse::State m_mousePreviousState);
 
 	void SetInputVector(DirectX::SimpleMath::Vector3 IPVector);
+	void RotateCamera(bool isRight);
 
 	InputCommands						m_InputCommands;
 

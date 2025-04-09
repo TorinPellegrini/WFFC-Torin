@@ -52,6 +52,13 @@ public:
 	void SaveDisplayChunk(ChunkObject *SceneChunk);	//saves geometry et al
 	void ClearDisplayList();
 
+	std::vector<int> m_selectedIDs;
+	void CheckPickedObject(int objectID);
+	int MousePicking();
+	int GetSelectedObject();
+	int m_selectedID;
+	bool m_isleftMButtonDown;
+
 #ifdef DXTK_AUDIO
 	void NewAudioDevice();
 #endif
@@ -71,15 +78,9 @@ private:
 	InputCommands						m_InputCommands;
 
 	//functionality
-	//float								m_movespeed;
 
 	//camera
-	//DirectX::SimpleMath::Vector3		m_camPosition;
-	//DirectX::SimpleMath::Vector3		m_camOrientation;
-	//DirectX::SimpleMath::Vector3		m_camLookAt;
-	//DirectX::SimpleMath::Vector3		m_camLookDirection;
-	//DirectX::SimpleMath::Vector3		m_camRight;
-	//float m_camRotRate;
+
 	Camera m_camera;
 
 	//Mouse Variables
@@ -87,8 +88,13 @@ private:
 	DirectX::Mouse::State m_mousePreviousState;
 
 
+
+	//Screen
+	RECT		m_ScreenDimensions;
+
 	//control variables
 	bool m_grid;							//grid rendering on / off
+
 	// Device resources.
     std::shared_ptr<DX::DeviceResources>    m_deviceResources;
 
@@ -130,7 +136,7 @@ private:
 #endif
 
     DirectX::SimpleMath::Matrix                                             m_world;
-    DirectX::SimpleMath::Matrix                                             m_view;
+  
     DirectX::SimpleMath::Matrix                                             m_projection;
 
 

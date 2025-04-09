@@ -57,6 +57,8 @@ void Game::Initialize(HWND window, int width, int height)
     m_deviceResources->CreateWindowSizeDependentResources();
     CreateWindowSizeDependentResources();
 
+    GetClientRect(window, &m_ScreenDimensions);
+
 #ifdef DXTK_AUDIO
     // Create DirectXTK for Audio objects
     AUDIO_ENGINE_FLAGS eflags = AudioEngine_Default;
@@ -124,11 +126,11 @@ void Game::Update(DX::StepTimer const& timer)
 
 	if (m_InputCommands.rotRight)
 	{
-		//m_camOrientation.y -= m_camRotRate;
+        m_camera.RotateCamera(true);
 	}
 	if (m_InputCommands.rotLeft)
 	{
-		//m_camOrientation.y += m_camRotRate;
+		m_camera.RotateCamera(false);
 	}
 
 	//process input and update stuff
@@ -155,16 +157,19 @@ void Game::Update(DX::StepTimer const& timer)
 
     m_camera.Update(m_mouseState, m_mousePreviousState);
 
-	//update lookat point
-	//m_camLookAt = m_camPosition + m_camLookDirection;
+    if (m_mouseState.leftButton == false && m_isleftMButtonDown == true)
+    {
+       m_selectedID = MousePicking();
+       CheckPickedObject(m_selectedID);
+    }
 
-	//apply camera vectors
-    //m_view = Matrix::CreateLookAt(m_camPosition, m_camLookAt, Vector3::UnitY);
 
     m_batchEffect->SetView(m_camera.m_view);
     m_batchEffect->SetWorld(Matrix::Identity);
 	m_displayChunk.m_terrainEffect->SetView(m_camera.m_view);
 	m_displayChunk.m_terrainEffect->SetWorld(Matrix::Identity);
+
+    m_isleftMButtonDown = m_mouseState.leftButton;
 
 #ifdef DXTK_AUDIO
     m_audioTimerAcc -= (float)timer.GetElapsedSeconds();
@@ -242,6 +247,26 @@ void Game::Render()
 		m_displayList[i].m_model->Draw(context, *m_states, local, m_camera.m_view, m_projection, false);	//last variable in draw,  make TRUE for wireframe
 
 		m_deviceResources->PIXEndEvent();
+
+        if (std::find(m_selectedIDs.begin(), m_selectedIDs.end(), i) != m_selectedIDs.end())
+        {
+            // Change color — highlight color
+            m_displayList[i].m_model->UpdateEffects(
+                [] 
+                (DirectX::IEffect* effect)
+                {
+                    static_cast <BasicEffect*>(effect)->SetColorAndAlpha({ 1.f, 0.f, 0.f, 1.f });
+                });
+        }
+        else
+        {
+            m_displayList[i].m_model->UpdateEffects(
+                []
+                (DirectX::IEffect* effect)
+                {
+                    static_cast <BasicEffect*>(effect)->SetColorAndAlpha({ 1.f, 1.f, 1.f, 1.f });
+                });
+        }
 	}
     m_deviceResources->PIXEndEvent();
 
@@ -323,6 +348,118 @@ void XM_CALLCONV Game::DrawGrid(FXMVECTOR xAxis, FXMVECTOR yAxis, FXMVECTOR orig
     m_batch->End();
 
     m_deviceResources->PIXEndEvent();
+}
+
+void Game::CheckPickedObject(int objectID)
+{
+    //TODO: BROKe
+
+    if (m_InputCommands.shift_pressed)
+    {
+        // Shift is held: Add to selection if not already selected
+        if (objectID != -1 &&
+            std::find(m_selectedIDs.begin(), m_selectedIDs.end(), objectID) == m_selectedIDs.end())
+        {
+            m_selectedIDs.push_back(objectID);
+           // m_displayList[objectID].m_isSelected = true;
+        }
+    }
+    else
+    {
+        // Shift is NOT held: Clear previous selection
+        for (int id : m_selectedIDs)
+        {
+            if (id >= 0 && id < m_displayList.size())
+                m_displayList[id].m_isSelected = false;
+        }
+        m_selectedIDs.clear();
+
+        // If a valid object is selected, make it the only selected object
+        if (objectID != -1)
+        {
+            m_selectedIDs.push_back(objectID);
+          //  m_displayList[objectID].m_isSelected = true;
+        }
+    }
+    
+}
+
+int Game::MousePicking()
+{
+    int selectedID = -1;
+    float closestDistance = FLT_MAX; 
+
+    const XMVECTOR nearSource = XMVectorSet(m_mouseState.x, m_mouseState.y, 0.0f, 1.0f);
+    const XMVECTOR farSource = XMVectorSet(m_mouseState.x, m_mouseState.y, 1.0f, 1.0f);
+
+    for (int i = 0; i < m_displayList.size(); i++)
+    {
+        const XMVECTORF32 scale = { m_displayList[i].m_scale.x, m_displayList[i].m_scale.y, m_displayList[i].m_scale.z };
+        const XMVECTORF32 translate = { m_displayList[i].m_position.x, m_displayList[i].m_position.y, m_displayList[i].m_position.z };
+
+        XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(
+            m_displayList[i].m_orientation.y * XM_PI / 180,
+            m_displayList[i].m_orientation.x * XM_PI / 180,
+            m_displayList[i].m_orientation.z * XM_PI / 180
+        );
+
+        XMMATRIX local = m_world * XMMatrixTransformation(
+            g_XMZero, Quaternion::Identity, scale,
+            g_XMZero, rotate, translate
+        );
+
+        XMVECTOR nearPoint = XMVector3Unproject(nearSource,
+            0.0f, 0.0f,
+            m_ScreenDimensions.right - m_ScreenDimensions.left,
+            m_ScreenDimensions.bottom - m_ScreenDimensions.top,
+            m_deviceResources->GetScreenViewport().MinDepth,
+            m_deviceResources->GetScreenViewport().MaxDepth,
+            m_projection, m_camera.m_view, local
+        );
+
+        XMVECTOR farPoint = XMVector3Unproject(farSource,
+            0.0f, 0.0f,
+            m_ScreenDimensions.right - m_ScreenDimensions.left,
+            m_ScreenDimensions.bottom - m_ScreenDimensions.top,
+            m_deviceResources->GetScreenViewport().MinDepth,
+            m_deviceResources->GetScreenViewport().MaxDepth,
+            m_projection, m_camera.m_view, local
+        );
+
+        XMVECTOR pickingVector = XMVector3Normalize(farPoint - nearPoint);
+
+        for (int y = 0; y < m_displayList[i].m_model.get()->meshes.size(); y++)
+        {
+            float hitDistance = 0.0f;
+            if (m_displayList[i].m_model.get()->meshes[y]->boundingBox.Intersects(
+                nearPoint, pickingVector, hitDistance))
+            {
+                if (hitDistance < closestDistance)
+                {
+                    closestDistance = hitDistance;
+                    selectedID = i;
+                }
+            }
+        }
+    }
+
+    for (auto& obj : m_displayList)
+    {
+        obj.m_isSelected = false;
+    }
+
+    if (selectedID != -1)
+    {
+        m_displayList[selectedID].m_isSelected = true;
+    }
+
+    return selectedID;
+
+}
+
+int Game::GetSelectedObject()
+{
+    return m_selectedID;
 }
 #pragma endregion
 

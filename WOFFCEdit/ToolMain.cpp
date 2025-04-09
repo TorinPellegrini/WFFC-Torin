@@ -282,6 +282,9 @@ void ToolMain::Tick(MSG *msg)
 	//do we have a selection
 	//do we have a mode
 	//are we clicking / dragging /releasing
+	m_selectedObject = m_d3dRenderer.GetSelectedObject();
+
+
 	//has something changed
 		//update Scenegraph
 		//add to scenegraph
@@ -319,11 +322,12 @@ void ToolMain::UpdateInput(MSG * msg)
 	case WM_XBUTTONDOWN:
 	case WM_XBUTTONUP:
 	case WM_MOUSEHOVER:
-	case WM_LBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
+	case WM_LBUTTONDOWN:
+		//mouse button down,  you will probably need to check when its up too
 		//set some flag for the mouse button in inputcommands
 		DirectX::Mouse::ProcessMessage(msg->message, msg->wParam, msg->lParam);
+		//mouse left pressed.	
 		break;
-
 	}
 	//here we update all the actual app functionality that we want.  This information will either be used int toolmain, or sent down to the renderer (Camera movement etc
 	//WASD movement
@@ -360,6 +364,19 @@ void ToolMain::UpdateInput(MSG * msg)
 		m_toolInputCommands.rotLeft = true;
 	}
 	else m_toolInputCommands.rotLeft = false;
+
+	//Ctrl + shift
+	if(m_keyArray[VK_CONTROL])
+	{
+		m_toolInputCommands.ctrl_pressed = true;
+	}
+	else m_toolInputCommands.ctrl_pressed = false;
+
+	if (m_keyArray[VK_SHIFT])
+	{
+		m_toolInputCommands.shift_pressed = true;
+	}
+	else m_toolInputCommands.shift_pressed = false;
 
 	//WASD
 }

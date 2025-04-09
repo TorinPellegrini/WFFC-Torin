@@ -1,6 +1,18 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Win32SimpleSample.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  Camera.cpp
-C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Camera.cpp(11,16): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Camera.cpp(51,56): warning C4244: '=': conversion from 'float' to 'LONG', possible loss of data
-C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Camera.cpp(52,56): warning C4244: '=': conversion from 'float' to 'LONG', possible loss of data
+  Game.cpp
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(243,57): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(242,57): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(241,97): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(227,10): warning C4101: 'Buffer': unreferenced local variable
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(372,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(392,73): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(392,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(393,72): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(393,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(395,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(414,39): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(413,38): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(423,39): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(422,38): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Game.cpp(431,27): warning C4018: '<': signed/unsigned mismatch
   Win32SimpleSample.vcxproj -> C:\Users\Thori\Documents\GitHub\WFFC-Torin\WOFFCEdit\Debug\WoFEdit.exe
