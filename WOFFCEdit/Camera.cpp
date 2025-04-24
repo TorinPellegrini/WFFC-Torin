@@ -156,6 +156,21 @@ void Camera::RotateCamera(bool isRight)
 	}
 }
 
+DirectX::SimpleMath::Vector3 Camera::GetUp()
+{
+	return m_camRight.Cross(m_camLookDirection);
+}
+
+DirectX::SimpleMath::Vector3 Camera::GetForward()
+{
+	return m_camLookDirection;
+}
+
+DirectX::SimpleMath::Vector3 Camera::GetRight()
+{
+	return m_camRight;
+}
+
 void Camera::SetMouseVisible(bool isVisible)
 {
 	if(isVisible)

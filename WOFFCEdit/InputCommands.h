@@ -13,4 +13,6 @@ struct InputCommands
 	bool mouse_LB_Down;
 	bool shift_pressed;
 	bool ctrl_pressed;
+	bool ctrlZ_pressed;
+	bool ctrlY_pressed;
 };

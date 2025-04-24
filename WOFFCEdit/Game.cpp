@@ -4,6 +4,10 @@
 
 #include "pch.h"
 #include "Game.h"
+
+#include <iostream>
+#include <ostream>
+
 #include "DisplayObject.h"
 #include <string>
 
@@ -112,6 +116,11 @@ void Game::Tick(InputCommands *Input)
     Render();
 }
 
+void Game::SetSelection(const std::vector<int>& ids)
+{
+	m_selectedIDs = ids;
+}
+
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
@@ -153,7 +162,7 @@ void Game::Update(DX::StepTimer const& timer)
         m_camera.SetInputVector(Vector3(0, 0, -1));
 	}
 
-    m_mousePreviousState = m_mouseState;
+    
 
     m_camera.Update(m_mouseState, m_mousePreviousState);
 
@@ -164,12 +173,81 @@ void Game::Update(DX::StepTimer const& timer)
     }
 
 
+    //Drag movement
+    if(m_mouseState.leftButton && !m_mousePreviousState.leftButton && !m_selectedIDs.empty())
+    {
+    	m_isDragging = true;
+    	m_dragStartScreenPos = { m_mouseState.x, m_mouseState.y };
+
+    	// Store initial positions and relative offsets
+    	const auto& selectedObj = m_displayList[m_selectedIDs[0]];
+    	m_dragStartWorldPos = selectedObj.m_position;
+    }
+    m_initialOffsets.clear(); // Clear previous offsets
+    for (int id : m_selectedIDs) {
+        // Store the relative position of each selected object
+        const auto& obj = m_displayList[id];
+        m_initialOffsets.push_back(obj.m_position - m_dragStartWorldPos);
+    }
+
+    if (m_isDragging && !m_selectedIDs.empty()) {
+
+        LONG dx = m_mouseState.x - m_dragStartScreenPos.x;
+        LONG dy = m_mouseState.y - m_dragStartScreenPos.y;
+
+        float movementSpeed = 0.03f; // Tune this to feel right
+
+        // Get the camera's forward and right vectors
+        Vector3 cameraForward = m_camera.GetForward();  // Camera's forward direction
+        Vector3 cameraRight = m_camera.GetRight();      // Camera's right direction
+        Vector3 cameraUp = m_camera.GetUp();            // Camera's up direction
+
+        // Scale the movement delta by the camera's axes
+        Vector3 worldDelta = (cameraRight * dx + cameraUp * -dy) * movementSpeed;
+
+        for (size_t i = 0; i < m_selectedIDs.size(); ++i) {
+            int id = m_selectedIDs[i];
+            const Vector3& initialOffset = m_initialOffsets[i];
+
+            // Update the object's position using its initial offset
+            m_displayList[id].m_position = m_dragStartWorldPos + worldDelta + initialOffset;
+        }
+    }
+
+    // End drag
+    if (!m_mouseState.leftButton && m_mousePreviousState.leftButton) {
+        m_isDragging = false;
+    }
+ 
+
+    if (m_InputCommands.ctrlZ_pressed == false && bUndoJustPressed == true)
+    {
+        m_commandManager.Undo(*this);
+    }
+
+ 
+
+    if(m_InputCommands.ctrlY_pressed == false && bRedoJustPressed == true)
+    {
+        m_commandManager.Redo(*this);
+    }
+    
+
+
+	
+
     m_batchEffect->SetView(m_camera.m_view);
     m_batchEffect->SetWorld(Matrix::Identity);
 	m_displayChunk.m_terrainEffect->SetView(m_camera.m_view);
 	m_displayChunk.m_terrainEffect->SetWorld(Matrix::Identity);
 
     m_isleftMButtonDown = m_mouseState.leftButton;
+
+    bUndoJustPressed = m_InputCommands.ctrlZ_pressed;
+    bRedoJustPressed = m_InputCommands.ctrlY_pressed;
+
+    m_mousePreviousState = m_mouseState;
+    m_dragStartScreenPos = { m_mouseState.x, m_mouseState.y };
 
 #ifdef DXTK_AUDIO
     m_audioTimerAcc -= (float)timer.GetElapsedSeconds();
@@ -250,12 +328,13 @@ void Game::Render()
 
         if (std::find(m_selectedIDs.begin(), m_selectedIDs.end(), i) != m_selectedIDs.end())
         {
-            // Change color — highlight color
+            // Change color ï¿½ highlight color
             m_displayList[i].m_model->UpdateEffects(
                 [] 
                 (DirectX::IEffect* effect)
                 {
                     static_cast <BasicEffect*>(effect)->SetColorAndAlpha({ 1.f, 0.f, 0.f, 1.f });
+
                 });
         }
         else
@@ -352,7 +431,9 @@ void XM_CALLCONV Game::DrawGrid(FXMVECTOR xAxis, FXMVECTOR yAxis, FXMVECTOR orig
 
 void Game::CheckPickedObject(int objectID)
 {
-    //TODO: BROKe
+
+
+	std::vector<int> prevSelection = m_selectedIDs;
 
     if (m_InputCommands.shift_pressed)
     {
@@ -381,6 +462,9 @@ void Game::CheckPickedObject(int objectID)
           //  m_displayList[objectID].m_isSelected = true;
         }
     }
+
+	std::vector<int> newSelection = m_selectedIDs;
+	m_commandManager.ExecuteCommand(std::make_unique<SelectCommand>(prevSelection, newSelection), *this);
     
 }
 

@@ -19,6 +19,11 @@ public:
 	void SetInputVector(DirectX::SimpleMath::Vector3 IPVector);
 	void RotateCamera(bool isRight);
 
+	DirectX::SimpleMath::Vector3 GetUp();
+	DirectX::SimpleMath::Vector3 GetForward();
+	DirectX::SimpleMath::Vector3 GetRight();
+
+
 	InputCommands						m_InputCommands;
 
 	DirectX::SimpleMath::Vector3		m_camPosition;

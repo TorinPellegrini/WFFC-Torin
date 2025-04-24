@@ -378,5 +378,17 @@ void ToolMain::UpdateInput(MSG * msg)
 	}
 	else m_toolInputCommands.shift_pressed = false;
 
+	if (m_keyArray[VK_CONTROL] && m_keyArray['Z'])
+	{
+		m_toolInputCommands.ctrlZ_pressed = true;
+	}
+	else m_toolInputCommands.ctrlZ_pressed = false;
+
+	if(m_keyArray[VK_CONTROL] && m_keyArray['Y'])
+	{
+		m_toolInputCommands.ctrlY_pressed = true;
+	}
+	else m_toolInputCommands.ctrlY_pressed = false;
+
 	//WASD
 }

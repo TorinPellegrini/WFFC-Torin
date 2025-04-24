@@ -60,6 +60,9 @@
       <Filter>MFC</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Command.cpp" />
+    <ClCompile Include="CommandManager.cpp" />
+    <ClCompile Include="SelectCommand.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeviceResources.h">
@@ -110,6 +113,9 @@
       <Filter>MFC</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Command.h" />
+    <ClInclude Include="CommandManager.h" />
+    <ClInclude Include="SelectCommand.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

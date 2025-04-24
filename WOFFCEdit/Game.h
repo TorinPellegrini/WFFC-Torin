@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <atltypes.h>
+
 #include "DeviceResources.h"
 #include "StepTimer.h"
 #include "SceneObject.h"
@@ -12,6 +14,8 @@
 #include "ChunkObject.h"
 #include "InputCommands.h"
 #include "Camera.h"
+#include "CommandManager.h"
+#include "SelectCommand.h"
 #include <vector>
 
 
@@ -59,6 +63,8 @@ public:
 	int m_selectedID;
 	bool m_isleftMButtonDown;
 
+	void SetSelection(const std::vector<int>& ids);
+
 #ifdef DXTK_AUDIO
 	void NewAudioDevice();
 #endif
@@ -78,6 +84,9 @@ private:
 	InputCommands						m_InputCommands;
 
 	//functionality
+	bool bUndoJustPressed;
+	bool bRedoJustPressed;
+	std::vector<DirectX::SimpleMath::Vector3> m_initialOffsets;
 
 	//camera
 
@@ -86,8 +95,12 @@ private:
 	//Mouse Variables
 	DirectX::Mouse::State m_mouseState;
 	DirectX::Mouse::State m_mousePreviousState;
+	bool m_isDragging = false;
+	DirectX::SimpleMath::Vector3 m_dragStartWorldPos;
+	POINT m_dragStartScreenPos;
 
-
+	//Command Manager
+	CommandManager m_commandManager;
 
 	//Screen
 	RECT		m_ScreenDimensions;
