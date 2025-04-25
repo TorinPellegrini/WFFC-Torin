@@ -88,6 +88,8 @@ private:
 	bool bRedoJustPressed;
 	std::vector<DirectX::SimpleMath::Vector3> m_initialOffsets;
 
+
+
 	//camera
 
 	Camera m_camera;
