@@ -15,4 +15,6 @@ struct InputCommands
 	bool ctrl_pressed;
 	bool ctrlZ_pressed;
 	bool ctrlY_pressed;
+	bool p_pressed;
+	bool o_pressed;
 };

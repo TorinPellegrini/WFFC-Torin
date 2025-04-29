@@ -9,6 +9,7 @@
 #include "resource.h"
 #include "MFCFrame.h"
 #include "SelectDialogue.h"
+#include "PositionDialogue.h"
 
 
 class MFCMain : public CWinApp 
@@ -35,6 +36,9 @@ private:
 	afx_msg void MenuFileSaveTerrain();
 	afx_msg void MenuEditSelect();
 	afx_msg	void ToolBarButton1();
+	afx_msg	void PositionButton();
+
+	PositionDialogue m_PositionDialog;
 
 
 	DECLARE_MESSAGE_MAP()	// required macro for message map functionality  One per class

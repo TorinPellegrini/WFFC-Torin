@@ -3,6 +3,12 @@
 #include "Game.h"
 
 
+template <typename T>
+T Clamp(T value, T min, T max)
+{
+	return (value < min) ? min : (value > max) ? max : value;
+}
+
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
@@ -210,4 +216,106 @@ void DisplayChunk::CalculateTerrainNormals()
 			m_terrainGeometry[i][j].normal = normalVector;	//set the normal for this point based on our result
 		}
 	}
+}
+
+float DisplayChunk::SampleTerrainHeight(float worldX, float worldZ) const
+{
+	// Convert world coordinates to terrain grid coordinates
+	float halfSize = m_terrainSize * 0.5f;
+	float gridX = (worldX + halfSize) / m_terrainPositionScalingFactor;
+	float gridZ = (worldZ + halfSize) / m_terrainPositionScalingFactor;
+
+	int x0 = (int)floorf(gridX);
+	int z0 = (int)floorf(gridZ);
+	int x1 = x0 + 1;
+	int z1 = z0 + 1;
+
+	// Clamp to valid range
+	x0 = Clamp(x0, 0, TERRAINRESOLUTION - 1);
+	z0 = Clamp(z0, 0, TERRAINRESOLUTION - 1);
+	x1 = Clamp(x1, 0, TERRAINRESOLUTION - 1);
+	z1 = Clamp(z1, 0, TERRAINRESOLUTION - 1);
+
+	// Interpolate bilinearly
+	float fracX = gridX - x0;
+	float fracZ = gridZ - z0;
+
+	float h00 = m_terrainGeometry[z0][x0].position.y;
+	float h10 = m_terrainGeometry[z0][x1].position.y;
+	float h01 = m_terrainGeometry[z1][x0].position.y;
+	float h11 = m_terrainGeometry[z1][x1].position.y;
+
+	float h0 = h00 + fracX * (h10 - h00);
+	float h1 = h01 + fracX * (h11 - h01);
+
+	return h0 + fracZ * (h1 - h0);
+}
+
+DirectX::SimpleMath::Vector3 DisplayChunk::SampleTerrainNormal(float worldX, float worldZ) const
+{
+	float halfSize = m_terrainSize * 0.5f;
+	float gridX = (worldX + halfSize) / m_terrainPositionScalingFactor;
+	float gridZ = (worldZ + halfSize) / m_terrainPositionScalingFactor;
+
+	int x0 = (int)floorf(gridX);
+	int z0 = (int)floorf(gridZ);
+	int x1 = x0 + 1;
+	int z1 = z0 + 1;
+
+	// Clamp to valid range
+	x0 = Clamp(x0, 0, TERRAINRESOLUTION - 1);
+	z0 = Clamp(z0, 0, TERRAINRESOLUTION - 1);
+	x1 = Clamp(x1, 0, TERRAINRESOLUTION - 1);
+	z1 = Clamp(z1, 0, TERRAINRESOLUTION - 1);
+
+	float fracX = gridX - x0;
+	float fracZ = gridZ - z0;
+
+	const Vector3& n00 = m_terrainGeometry[z0][x0].normal;
+	const Vector3& n10 = m_terrainGeometry[z0][x1].normal;
+	const Vector3& n01 = m_terrainGeometry[z1][x0].normal;
+	const Vector3& n11 = m_terrainGeometry[z1][x1].normal;
+
+	Vector3 n0 = n00 + (n10 - n00) * fracX;
+	Vector3 n1 = n01 + (n11 - n01) * fracX;
+	Vector3 finalNormal = n0 + (n1 - n0) * fracZ;
+
+	finalNormal.Normalize();
+	return finalNormal;
+}
+
+void DisplayChunk::ModifyTerrainCircle(DirectX::SimpleMath::Vector3 circleCenter, float radius, bool raise)
+{
+	float heightModifier = raise ? 1.0f : -1.0f;  // Modify height in raw byte units
+
+	// Loop through heightmap coordinates
+	for (int z = 0; z < TERRAINRESOLUTION; ++z)
+	{
+		for (int x = 0; x < TERRAINRESOLUTION; ++x)
+		{
+			// Calculate world position of this heightmap point
+			float worldX = x * m_terrainPositionScalingFactor - (0.5f * m_terrainSize);
+			float worldZ = z * m_terrainPositionScalingFactor - (0.5f * m_terrainSize);
+
+			// Calculate distance to the center of the circle
+			float dx = worldX - circleCenter.x;
+			float dz = worldZ - circleCenter.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			if (distance <= radius)
+			{
+				int index = z * TERRAINRESOLUTION + x;
+
+				// Safely modify the raw heightmap value (clamp between 0 and 255)
+				int newHeight = static_cast<int>(m_heightMap[index]) + static_cast<int>(heightModifier);
+				m_heightMap[index] = static_cast<unsigned char>(Clamp(newHeight, 0, 255));
+			}
+		}
+	}
+
+	// Update geometry and recalculate normals
+	UpdateTerrain();
+	CalculateTerrainNormals();
+	//SaveHeightMap();
+
 }

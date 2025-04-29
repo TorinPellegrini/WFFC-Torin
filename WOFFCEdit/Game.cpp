@@ -121,6 +121,52 @@ void Game::SetSelection(const std::vector<int>& ids)
 	m_selectedIDs = ids;
 }
 
+void Game::SetObjectPosition(int objectID, DirectX::SimpleMath::Vector3 position)
+{
+    m_displayList[objectID].m_position = position;
+}
+
+void Game::getSelectedObjectPos(float& x, float& y, float& z)
+{
+    if (m_selectedIDs.empty()) return;
+    x = m_displayList[m_selectedIDs[0]].m_position.x;
+    y = m_displayList[m_selectedIDs[0]].m_position.y;
+    z = m_displayList[m_selectedIDs[0]].m_position.z;
+}
+
+void Game::translateX(bool direction)
+{
+    if (direction) {
+        m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.x + 10;
+    }
+    else 
+    {
+        m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.x - 10;
+    }
+}
+
+void Game::translateY(bool direction)
+{
+    if (direction) {
+        m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.y + 10;
+    }
+    else
+    {
+        m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.y - 10;
+    }
+}
+
+void Game::translateZ(bool direction)
+{
+    if (direction) {
+        m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.z + 10;
+    }
+    else
+    {
+        m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.z - 10;
+    }
+}
+
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
@@ -162,16 +208,46 @@ void Game::Update(DX::StepTimer const& timer)
         m_camera.SetInputVector(Vector3(0, 0, -1));
 	}
 
-    
+
+
+    // Start terrain modification
+    if ((m_InputCommands.p_pressed || m_InputCommands.o_pressed) && !m_activeTerrainCommand.get()) {
+        m_activeTerrainCommand = std::make_unique<TerrainCommand>(m_displayChunk);
+        m_activeTerrainCommand->CaptureInitialState();
+    }
+
+    // Apply terrain modification while pressed
+    if (m_InputCommands.p_pressed || m_InputCommands.o_pressed) {
+        DirectX::SimpleMath::Vector3 circleCenter = m_circlePosition;
+        float radius = m_circleRadius;
+        bool raise = m_InputCommands.p_pressed;
+
+        m_displayChunk.ModifyTerrainCircle(circleCenter, radius, raise);
+    }
+
+    // Finalize terrain command on key release
+    if ((!m_InputCommands.p_pressed && !m_InputCommands.o_pressed) && m_activeTerrainCommand.get()) {
+        m_activeTerrainCommand->CaptureFinalState();
+        m_commandManager.ExecuteCommand(std::move(m_activeTerrainCommand), *this);
+    }
+
+    if (m_mouseState.scrollWheelValue != 0)
+    {
+        m_circleRadius += m_mouseState.scrollWheelValue / 120;
+        if (m_circleRadius < 2) 
+        {
+            m_circleRadius = 2;
+        }
+        if (m_circleRadius > 20) 
+        {
+            m_circleRadius = 20;
+        }
+        m_mouse->ResetScrollWheelValue();
+    }
 
     m_camera.Update(m_mouseState, m_mousePreviousState);
 
-    if (m_mouseState.leftButton == false && m_isleftMButtonDown == true)
-    {
-       m_selectedID = MousePicking();
-       CheckPickedObject(m_selectedID);
-    }
-
+    m_circlePosition = RaycastToGroundPlane();
 
     //Drag movement
     if(m_mouseState.leftButton && !m_mousePreviousState.leftButton && !m_selectedIDs.empty())
@@ -182,7 +258,14 @@ void Game::Update(DX::StepTimer const& timer)
     	// Store initial positions and relative offsets
     	const auto& selectedObj = m_displayList[m_selectedIDs[0]];
     	m_dragStartWorldPos = selectedObj.m_position;
+
+        for (const auto id : m_selectedIDs) {
+            m_initialPositions.push_back(m_displayList[id].m_position);
+        }
+
+
     }
+
     m_initialOffsets.clear(); // Clear previous offsets
     for (int id : m_selectedIDs) {
         // Store the relative position of each selected object
@@ -217,6 +300,15 @@ void Game::Update(DX::StepTimer const& timer)
     // End drag
     if (!m_mouseState.leftButton && m_mousePreviousState.leftButton) {
         m_isDragging = false;
+
+
+        for (const auto id : m_selectedIDs) {
+            m_finalPositions.push_back(m_displayList[id].m_position);
+        }
+        m_commandManager.ExecuteCommand(std::make_unique<MoveCommand>(m_selectedIDs, m_initialPositions, m_finalPositions), *this);
+        m_initialPositions.clear();
+        m_initialOffsets.clear();
+        m_finalPositions.clear();
     }
  
 
@@ -233,7 +325,11 @@ void Game::Update(DX::StepTimer const& timer)
     }
     
 
-
+    if (m_mouseState.leftButton == false && m_isleftMButtonDown == true)
+    {
+        m_selectedID = MousePicking();
+        CheckPickedObject(m_selectedID);
+    }
 	
 
     m_batchEffect->SetView(m_camera.m_view);
@@ -349,6 +445,7 @@ void Game::Render()
 	}
     m_deviceResources->PIXEndEvent();
 
+
 	//RENDER TERRAIN
 	context->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
 	context->OMSetDepthStencilState(m_states->DepthDefault(),0);
@@ -357,6 +454,48 @@ void Game::Render()
 
 	//Render the batch,  This is handled in the Display chunk becuase it has the potential to get complex
 	m_displayChunk.RenderBatch(m_deviceResources);
+
+
+    if (m_drawCircle)
+    {
+        m_deviceResources->PIXBeginEvent(L"Draw Circle");
+
+        auto context = m_deviceResources->GetD3DDeviceContext();
+        context->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
+        context->OMSetDepthStencilState(m_states->DepthNone(), 0);
+        context->RSSetState(m_states->CullNone());
+
+        m_batchEffect->Apply(context);
+        context->IASetInputLayout(m_batchInputLayout.Get());
+
+        m_batch->Begin();
+
+        constexpr int segments = 64;
+        float angleStep = XM_2PI / segments;
+
+        for (int i = 0; i < segments; ++i)
+        {
+            float theta1 = i * angleStep;
+            float theta2 = (i + 1) * angleStep;
+
+            Vector3 offset1 = Vector3(cosf(theta1), 0.0f, sinf(theta1)) * m_circleRadius;
+            Vector3 offset2 = Vector3(cosf(theta2), 0.0f, sinf(theta2)) * m_circleRadius;
+
+            Vector3 pos1XZ = m_circlePosition + offset1;
+            Vector3 pos2XZ = m_circlePosition + offset2;
+
+            float y1 = m_displayChunk.SampleTerrainHeight(pos1XZ.x, pos1XZ.z);
+            float y2 = m_displayChunk.SampleTerrainHeight(pos2XZ.x, pos2XZ.z);
+
+            Vector3 p1(pos1XZ.x, y1, pos1XZ.z);
+            Vector3 p2(pos2XZ.x, y2, pos2XZ.z);
+
+            m_batch->DrawLine(VertexPositionColor(p1, Colors::Red), VertexPositionColor(p2, Colors::Red));
+        }
+
+        m_batch->End();
+        m_deviceResources->PIXEndEvent();
+    }
 
     m_deviceResources->Present();
 }
@@ -427,6 +566,67 @@ void XM_CALLCONV Game::DrawGrid(FXMVECTOR xAxis, FXMVECTOR yAxis, FXMVECTOR orig
     m_batch->End();
 
     m_deviceResources->PIXEndEvent();
+}
+
+DirectX::SimpleMath::Vector3 Game::RaycastToGroundPlane()
+{
+    float screenWidth = static_cast<float>(m_ScreenDimensions.right - m_ScreenDimensions.left);
+    float screenHeight = static_cast<float>(m_ScreenDimensions.bottom - m_ScreenDimensions.top);
+
+    XMVECTOR nearSource = XMVectorSet((float)m_mouseState.x, (float)m_mouseState.y, 0.0f, 1.0f);
+    XMVECTOR farSource = XMVectorSet((float)m_mouseState.x, (float)m_mouseState.y, 1.0f, 1.0f);
+
+    XMVECTOR nearPoint = XMVector3Unproject(nearSource, 0.0f, 0.0f, screenWidth, screenHeight,
+        m_deviceResources->GetScreenViewport().MinDepth,
+        m_deviceResources->GetScreenViewport().MaxDepth,
+        m_projection, m_camera.m_view, XMMatrixIdentity());
+
+    XMVECTOR farPoint = XMVector3Unproject(farSource, 0.0f, 0.0f, screenWidth, screenHeight,
+        m_deviceResources->GetScreenViewport().MinDepth,
+        m_deviceResources->GetScreenViewport().MaxDepth,
+        m_projection, m_camera.m_view, XMMatrixIdentity());
+
+    Vector3 rayOrigin(nearPoint);
+    Vector3 rayDir = Vector3(farPoint - nearPoint);
+    rayDir.Normalize();
+
+    Vector3 closestHit = Vector3::Zero;
+    float closestDist = FLT_MAX;
+
+    for (int z = 0; z < TERRAINRESOLUTION - 1; ++z)
+    {
+        for (int x = 0; x < TERRAINRESOLUTION - 1; ++x)
+        {
+            const Vector3& v0 = m_displayChunk.m_terrainGeometry[z][x].position;
+            const Vector3& v1 = m_displayChunk.m_terrainGeometry[z][x + 1].position;
+            const Vector3& v2 = m_displayChunk.m_terrainGeometry[z + 1][x].position;
+            const Vector3& v3 = m_displayChunk.m_terrainGeometry[z + 1][x + 1].position;
+
+            float dist;
+
+            // Triangle 1: v0, v1, v2
+            if (TriangleTests::Intersects(rayOrigin, rayDir, v0, v1, v2, dist))
+            {
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    closestHit = rayOrigin + rayDir * dist;
+                }
+            }
+
+            // Triangle 2: v2, v1, v3
+            if (TriangleTests::Intersects(rayOrigin, rayDir, v2, v1, v3, dist))
+            {
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    closestHit = rayOrigin + rayDir * dist;
+                }
+            }
+        }
+    }
+
+    return closestHit;
 }
 
 void Game::CheckPickedObject(int objectID)

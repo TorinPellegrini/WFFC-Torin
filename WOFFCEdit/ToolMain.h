@@ -25,6 +25,10 @@ public: //methods
 
 	void	Tick(MSG *msg);
 	void	UpdateInput(MSG *msg);
+	void translateX(bool direction);
+	void translateY(bool direction);
+	void translateZ(bool direction);
+	void getSelectedObjectPos(float& x, float& y, float& z);
 
 public:	//variables
 	std::vector<SceneObject>    m_sceneGraph;	//our scenegraph storing all the objects in the current chunk

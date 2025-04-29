@@ -390,5 +390,40 @@ void ToolMain::UpdateInput(MSG * msg)
 	}
 	else m_toolInputCommands.ctrlY_pressed = false;
 
+	if (m_keyArray['P'])
+	{
+		m_toolInputCommands.p_pressed = true;
+	}
+	else m_toolInputCommands.p_pressed = false;
+
+	if (m_keyArray['O'])
+	{
+		m_toolInputCommands.o_pressed = true;
+	}
+	else m_toolInputCommands.o_pressed = false;
+
+
 	//WASD
+}
+
+void ToolMain::translateX(bool direction)
+{
+	m_d3dRenderer.translateX(direction);
+}
+
+void ToolMain::translateY(bool direction)
+{
+	m_d3dRenderer.translateY(direction);
+
+}
+
+void ToolMain::translateZ(bool direction)
+{
+	m_d3dRenderer.translateZ(direction);
+
+}
+
+void ToolMain::getSelectedObjectPos(float& x, float& y, float& z)
+{
+	m_d3dRenderer.getSelectedObjectPos(x, y, z);
 }

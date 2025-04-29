@@ -16,6 +16,9 @@
 #include "Camera.h"
 #include "CommandManager.h"
 #include "SelectCommand.h"
+#include "MoveCommand.h"
+#include "TerrainCommand.h"
+
 #include <vector>
 
 
@@ -65,6 +68,14 @@ public:
 
 	void SetSelection(const std::vector<int>& ids);
 
+	void SetObjectPosition(int objectID, DirectX::SimpleMath::Vector3 position);
+
+	void getSelectedObjectPos(float& x, float& y, float& z);
+	void translateX(bool direction);
+	void translateY(bool direction);
+	void translateZ(bool direction);
+
+
 #ifdef DXTK_AUDIO
 	void NewAudioDevice();
 #endif
@@ -78,6 +89,12 @@ private:
 
 	void XM_CALLCONV DrawGrid(DirectX::FXMVECTOR xAxis, DirectX::FXMVECTOR yAxis, DirectX::FXMVECTOR origin, size_t xdivs, size_t ydivs, DirectX::GXMVECTOR color);
 
+	DirectX::SimpleMath::Vector3 RaycastToGroundPlane();
+
+
+	// Declare a TerrainCommand pointer at the class level to track the current terrain edit
+	std::unique_ptr<TerrainCommand> m_activeTerrainCommand;
+
 	//tool specific
 	std::vector<DisplayObject>			m_displayList;
 	DisplayChunk						m_displayChunk;
@@ -87,8 +104,13 @@ private:
 	bool bUndoJustPressed;
 	bool bRedoJustPressed;
 	std::vector<DirectX::SimpleMath::Vector3> m_initialOffsets;
+	std::vector<DirectX::SimpleMath::Vector3> m_initialPositions;
+	std::vector<DirectX::SimpleMath::Vector3> m_finalPositions;
 
-
+	//Terrain Circle
+	bool m_drawCircle = true;
+	DirectX::SimpleMath::Vector3 m_circlePosition = DirectX::SimpleMath::Vector3::Zero;
+	float m_circleRadius = 10.0f;
 
 	//camera
 

@@ -64,6 +64,8 @@
     <ClCompile Include="CommandManager.cpp" />
     <ClCompile Include="SelectCommand.cpp" />
     <ClCompile Include="MoveCommand.cpp" />
+    <ClCompile Include="TerrainCommand.cpp" />
+    <ClCompile Include="PositionDialogue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeviceResources.h">
@@ -118,6 +120,8 @@
     <ClInclude Include="CommandManager.h" />
     <ClInclude Include="SelectCommand.h" />
     <ClInclude Include="MoveCommand.h" />
+    <ClInclude Include="TerrainCommand.h" />
+    <ClInclude Include="PositionDialogue.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
