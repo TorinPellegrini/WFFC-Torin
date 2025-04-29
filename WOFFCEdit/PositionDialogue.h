@@ -44,3 +44,5 @@ private:
     ToolMain* m_toolMain;
 };
 
+INT_PTR CALLBACK SelectProc(HWND   hwndDlg, UINT   uMsg, WPARAM wParam, LPARAM lParam);
+

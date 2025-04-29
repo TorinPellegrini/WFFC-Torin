@@ -136,6 +136,10 @@ void Game::getSelectedObjectPos(float& x, float& y, float& z)
 
 void Game::translateX(bool direction)
 {
+    if(m_selectedIDs.empty())
+    {
+	    return;
+    }
     if (direction) {
         m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.x + 10;
     }
@@ -147,6 +151,10 @@ void Game::translateX(bool direction)
 
 void Game::translateY(bool direction)
 {
+    if (m_selectedIDs.empty())
+    {
+        return;
+    }
     if (direction) {
         m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.y + 10;
     }
@@ -158,6 +166,10 @@ void Game::translateY(bool direction)
 
 void Game::translateZ(bool direction)
 {
+    if (m_selectedIDs.empty())
+    {
+        return;
+    }
     if (direction) {
         m_displayList[m_selectedIDs[0]].m_position.x = m_displayList[m_selectedIDs[0]].m_position.z + 10;
     }
