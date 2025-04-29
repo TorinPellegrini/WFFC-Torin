@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "resource.h"
 
+
 class ToolMain;
 
 class PositionDialogue :

@@ -2,6 +2,8 @@
 #include <string>
 #include "ToolMain.h"
 #include "stdafx.h"
+#include "resource.h"
+
 
 IMPLEMENT_DYNAMIC(PositionDialogue, CDialogEx)
 
@@ -59,6 +61,19 @@ void PositionDialogue::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_XPOSITION, transX);
 	DDX_Control(pDX, IDC_YPOSITION, transY);
 	DDX_Control(pDX, IDC_ZPOSITION, transZ);
+}
+
+PositionDialogue::PositionDialogue(CWnd* pParent) : CDialogEx(ID_EDIT_POSITIONTOOL, pParent)
+{
+}
+
+PositionDialogue::~PositionDialogue()
+{
+}
+
+void PositionDialogue::End()
+{
+	DestroyWindow();
 }
 
 void PositionDialogue::SetObjectData(ToolMain* toolmain, float PosX, float PosY, float PosZ)
