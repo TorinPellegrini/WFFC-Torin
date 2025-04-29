@@ -112,7 +112,7 @@ void MFCMain::ToolBarButton1()
 
 void MFCMain::PositionButton()
 {
-	m_PositionDialog.Create(IDD_DIALOG2);
+	m_PositionDialog.Create(ID_EDIT_POSITIONTOOL);
 	m_PositionDialog.ShowWindow(SW_SHOW);
 
 	float x, y, z;
